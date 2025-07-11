@@ -1,0 +1,175 @@
+const int servo1Pin = 5;  // 서보 5 핀
+
+const int servo2Pin = 5;  // 서보 5 핀
+
+
+
+volatile int pulseWidth1 = 1200;  // 서보 1 펄스 폭 (기본값 1500μs)
+
+volatile int pulseWidth2 = 1600;  // 서보 2 펄스 폭 (기본값 1500μs)
+
+
+
+void setup() {
+
+  pinMode(servo1Pin, OUTPUT);
+
+  pinMode(servo2Pin, OUTPUT);
+
+  Serial.begin(9600);
+
+  
+
+  // Timer1 설정
+
+  TCCR1A = 0;
+
+  TCCR1B = 0;
+
+  TCNT1 = 0;
+
+  
+
+  // CTC 모드 설정
+
+  TCCR1B |= (1 << WGM12);
+
+  
+
+  // 프리스케일러 = 8
+
+  TCCR1B |= (1 << CS11);
+
+  
+
+  // 15ms 주기 (30000 = 15ms * 2MHz)
+
+  OCR1A = 30000;
+
+  
+
+  // 타이머1 비교일치 인터럽트 활성화
+
+  TIMSK1 |= (1 << OCIE1A);
+
+}
+
+
+
+void loop() {
+
+  if (Serial.available() > 1) {
+
+    // 첫 번째 펄스 폭 읽기
+
+    int width1 = Serial.parseInt();
+
+    
+
+    // 쉼표 체크
+
+    if (Serial.read() == ',') {
+
+      // 두 번째 펄스 폭 읽기
+
+      int width2 = Serial.parseInt();
+
+      
+
+      // 유효성 검사 (500-2500μs)
+
+      if (width1 >= 500 && width1 <= 2500 && 
+
+          width2 >= 500 && width2 <= 2500) {
+
+        pulseWidth1 = width1;
+
+        pulseWidth2 = width2;
+
+        
+
+        // 설정값 출력
+
+        Serial.print("Servo1: ");
+
+        Serial.print(pulseWidth1);
+
+        Serial.print("us, Servo2: ");
+
+        Serial.print(pulseWidth2);
+
+        Serial.println("us");
+
+      }
+
+    }
+
+  }
+
+}
+
+
+
+// 타이머1 ISR
+
+ISR(TIMER1_COMPA_vect) {
+
+  static uint8_t state = 0;
+
+  static uint16_t count = 0;
+
+  
+
+  switch(state) {
+
+    case 0:  // 서보1 시작
+
+      digitalWrite(servo1Pin, HIGH);
+
+      OCR1A = pulseWidth1 * 2;  // 펄스 폭 설정
+
+      state = 1;
+
+      break;
+
+      
+
+    case 1:  // 서보1 종료
+
+      digitalWrite(servo1Pin, LOW);
+
+      OCR1A = 1000;  // 0.5ms 대기
+
+      state = 2;
+
+      break;
+
+      
+
+    case 2:  // 서보2 시작
+
+      digitalWrite(servo2Pin, HIGH);
+
+      OCR1A = pulseWidth2 * 2;
+
+      state = 3;
+
+      break;
+
+      
+
+    case 3:  // 서보2 종료 및 남은 주기
+
+      digitalWrite(servo2Pin, LOW);
+
+      // 남은 시간 계산: 15ms - (서보1 펄스 + 0.5ms + 서보2 펄스)
+
+      OCR1A = 30000 - (pulseWidth1 + pulseWidth2) * 2 - 1000;
+
+      state = 0;
+
+      break;
+
+  }
+
+}
