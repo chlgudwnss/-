@@ -1,0 +1,61 @@
+#include <NewPing.h>
+#include <math.h>
+
+// 초음파 센서 핀 정의
+NewPing sonar[6] = {
+  NewPing(22, 23, 200), // Front 1
+  NewPing(26, 27, 200), // Front 2
+  NewPing(30, 31, 200), // Left 1 (앞)
+  NewPing(34, 35, 200), // Left 2 (뒤)
+  NewPing(46, 47, 200), // Right 1 (앞)
+  NewPing(50, 51, 200)  // Right 2 (뒤)
+};
+
+// 센서 간 거리 (cm)
+const float leftGap = 10.0;
+const float rightGap = 10.0;
+
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  // 거리 측정
+  int front1 = sonar[0].ping_cm();
+  int front2 = sonar[1].ping_cm();
+  int left1  = sonar[2].ping_cm();
+  int left2  = sonar[3].ping_cm();
+  int right1 = sonar[4].ping_cm();
+  int right2 = sonar[5].ping_cm();
+
+  // 거리 측정 실패(0) 시 200cm로 처리
+  if (front1 == 0) front1 = 200;
+  if (front2 == 0) front2 = 200;
+  if (left1  == 0) left1  = 200;
+  if (left2  == 0) left2  = 200;
+  if (right1 == 0) right1 = 200;
+  if (right2 == 0) right2 = 200;
+
+  // Front 센서 출력
+  Serial.print("Front 1: "); Serial.print(front1); Serial.println(" cm");
+  Serial.print("Front 2: "); Serial.print(front2); Serial.println(" cm");
+
+  // Left 평균 거리 + 기울기
+  float leftAvg = (left1 + left2) / 2.0;
+  float leftAngleRad = atan2((float)(left1 - left2), leftGap);
+  float leftAngleDeg = leftAngleRad * 180.0 / PI;
+  Serial.print("Left Avg Distance: "); Serial.print(leftAvg); Serial.print(" cm, ");
+  Serial.print("Angle: "); Serial.print(leftAngleRad, 3); Serial.print(" rad / ");
+  Serial.print(leftAngleDeg, 1); Serial.println(" deg");
+
+  // Right 평균 거리 + 기울기
+  float rightAvg = (right1 + right2) / 2.0;
+  float rightAngleRad = atan2((float)(right1 - right2), rightGap);
+  float rightAngleDeg = rightAngleRad * 180.0 / PI;
+  Serial.print("Right Avg Distance: "); Serial.print(rightAvg); Serial.print(" cm, ");
+  Serial.print("Angle: "); Serial.print(rightAngleRad, 3); Serial.print(" rad / ");
+  Serial.print(rightAngleDeg, 1); Serial.println(" deg");
+
+  Serial.println("----------------------------");
+  delay(500);
+}
