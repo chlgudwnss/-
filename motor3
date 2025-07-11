@@ -1,0 +1,14 @@
+const int Dir2Pin_A = 12;  // ← D12로 수정
+const int SpeedPin_A = 3;
+
+void setup() {
+  pinMode(Dir2Pin_A, OUTPUT);
+  pinMode(SpeedPin_A, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(Dir2Pin_A, LOW);   // 정방향 (혹은 HIGH로 바꿔 실험)
+  analogWrite(SpeedPin_A, 180);   // 속도
+  delay(3000);
+  analogWrite(SpeedPin_A, 0);     // 멈춤
+  delay(3000);
