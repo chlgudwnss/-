@@ -1,0 +1,52 @@
+const int ENABLE=10;
+const int DIR1=9;
+const int DIR2=8;
+const int BUTTON = 3;
+const int POT = A5;
+enum MOTOR_DIRECTION{FOWARD=0, BACKWARD=1};
+
+enum MOTOR_DIRECTION Direction;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(ENABLE, OUTPUT);
+  pinMode(DIR1, OUTPUT);
+  pinMode(DIR2, OUTPUT);
+  pinMode(BUTTON, INPUT);
+  digitalWrite(ENABLE, LOW);
+  
+}
+
+
+
+void loop() {
+  if(digitalRead(BUTTON)==0){
+    delay(100);
+    if(Direction==FOWARD){
+      Direction=BACKWARD;
+      }else{
+      Direction=FOWARD;  
+      }
+    delay(100);
+    }
+    
+    Serial.print("Direction:");
+    Serial.println(Direction);
+  
+  int pot_position = analogRead(POT);
+  int speed = map(pot_position, 0, 1024, 0, 255);
+   analogWrite(ENABLE, speed);
+
+  if(Direction == FOWARD){
+    digitalWrite(DIR1, HIGH);
+    digitalWrite(DIR2, LOW);
+    
+    }else{
+    digitalWrite(DIR1, LOW);
+    digitalWrite(DIR2, HIGH); 
+      
+      }
+
+  
+
+}
